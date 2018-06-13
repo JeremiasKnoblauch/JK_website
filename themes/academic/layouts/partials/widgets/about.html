@@ -1,0 +1,162 @@
+{{ $ := .root }}
+{{ $page := .page }}
+
+<!-- About widget -->
+<div class="row" itemprop="author" itemscope itemtype="http://schema.org/Person" itemref="{{ if $.Site.Params.email }}person-email{{ end }}{{ if $.Site.Params.phone }} person-telephone{{ end }}{{ if $.Site.Params.address}} person-address{{ end }}">
+  <div class="col-xs-12 col-md-4">
+    <div id="profile">
+
+      {{ if $.Site.Params.gravatar }}
+      <div class="portrait" style="background-image: url('https://s.gravatar.com/avatar/{{ md5 $.Site.Params.email }}?s=200');"></div>
+      <meta itemprop="image" content="https://s.gravatar.com/avatar/{{ md5 $.Site.Params.email }}?s=200">
+      {{ else if $.Site.Params.avatar }}
+      <img src= "{{ $.Site.BaseURL }}img/{{ $.Site.Params.avatar }}" width="100%"> 
+      <!--<div class="portrait" style="background-image: url('{{ $.Site.BaseURL }}img/{{ $.Site.Params.avatar }}');"></div> -->
+      <!--<div class="portrait" style="background-image: url('{{ $.Site.BaseURL }}img/{{ $.Site.Params.avatar }}');"></div> -->
+      <meta itemprop="image" content="{{ $.Site.BaseURL }}img/{{ $.Site.Params.avatar }}">
+      {{ end }}
+
+      <div class="portrait-title">
+        <h2 itemprop="name">{{ $.Site.Params.name }}</h2>
+        {{ with $.Site.Params.role }}<h3 itemprop="jobTitle">{{ . }}</h3>{{ end }}
+
+        {{/* Support legacy `organization` option. */}}
+        {{ if $.Site.Params.organization }}
+        <h3 itemprop="worksFor" itemscope itemtype="http://schema.org/Organization">
+          {{ with $.Site.Params.organization_url }}<a href="{{ . }}" target="_blank" itemprop="url" rel="noopener">{{ end }}
+            <span itemprop="name">{{ $.Site.Params.organization }}</span>
+          {{ if $.Site.Params.organization_url }}</a>{{ end }}
+        </h3>
+        {{ end }}
+
+        {{ range $.Site.Params.organizations }}
+        <h3 itemprop="worksFor" itemscope itemtype="http://schema.org/Organization">
+          {{ with .url }}<a href="{{ . }}" target="_blank" itemprop="url" rel="noopener">{{ end }}
+          <span itemprop="name">{{ .name }}</span>
+          {{ if .url }}</a>{{ end }}
+        </h3>
+        {{ end }}
+
+      </div>
+
+      <link itemprop="url" href="{{ $.Site.BaseURL }}">
+
+      <ul class="network-icon" aria-hidden="true">
+        {{ range $.Site.Params.social }}
+        {{ $pack := or .icon_pack "fa" }}
+        <li>
+          <a itemprop="sameAs" href="{{ .link | safeURL }}" target="_blank" rel="noopener">
+            <i class="{{ $pack }} {{ $pack }}-{{ .icon }} big-icon"></i>
+          </a>
+        </li>
+        {{ end }}
+      </ul>
+
+      <!-- we insert interests and educ here -->
+    </div>
+      {{ with $page.Params.interests }}
+        <h3>{{ i18n "interests" | markdownify }}</h3>
+        <ul class="ul-interests">
+          {{ range .interests }}
+          <li>{{ . | markdownify }}</li>
+          {{ end }}
+        </ul>
+      {{ end }}
+
+      {{ with $page.Params.education }}
+      <div cla="col-sm-7">
+        <h3>{{ i18n "education" | markdownify }}</h3>
+        <ul class="ul-edu fa-ul">
+          {{ range .courses }}
+          <li>
+            <i class="fa-li fa fa-graduation-cap"></i>
+            <div class="description">
+              <p class="course">{{ .course }}{{ with .year }}, {{ . }}{{ end }}</p>
+              <p class="institution">{{ .institution }}</p>
+            </div>
+          </li>
+          {{ end }}
+        </ul>
+      </div>
+      {{ end }}
+
+  </div>
+
+	<!-- insert recent pubs here-->
+
+  <div class="col-xs-12 col-md-4 section-heading">
+		  <!--<h1>{{ with $page.Title }}{{ . | markdownify }}{{ end }}</h1>-->
+    {{ with $page.Params.subtitle }}<p>{{ . | markdownify }}</p>{{ end }}
+  </div>
+  <div class="col-xs-12 col-md-8">
+    {{ with $page.Content }}<p>{{ . | markdownify }}</p>{{ end }}
+    <h2> Recent Publications </h2>
+
+    {{ if and ($page.Params.publication_type) (ne $page.Params.publication_type "-1") }}
+      {{ $.Scratch.Set "sel_pubs" (where (where (where $.Site.RegularPages "Type" "publication") ".Params.selected" true) ".Params.publication_types" "intersect" (slice $page.Params.publication_type)) }}
+    {{ else }}
+      {{ $.Scratch.Set "sel_pubs" (where (where $.Site.RegularPages "Type" "publication") ".Params.selected" true) }}
+    {{ end }}
+
+    {{ $sel_pubs := $.Scratch.Get "sel_pubs" }}
+    {{ range $sel_pubs }}
+      {{ if eq $page.Params.list_format 1 }}
+        {{ partial "publication_li_detailed" . }}
+      {{ else if eq $page.Params.list_format 2 }}
+        {{ partial "publication_li_apa" . }}
+      {{ else if eq $page.Params.list_format 3 }}
+        {{ partial "publication_li_mla" . }}
+      {{ else }}
+        {{ partial "publication_li_simple" . }}
+      {{ end }}
+    {{ end }}
+
+</div>
+
+	<!-- inserted recent pubs here-->
+
+
+
+	<!-- insert upcoming/recent talks and publicity here -->
+
+	
+<!-- upcoming talks -->
+<!--<div class="row">-->
+  <div class="col-xs-12 col-md-4 section-heading">
+    <h2>Upcoming Talks</h2>
+    {{ with $page.Params.subtitle }}<p>{{ . | markdownify }}</p>{{ end }}
+  </div>
+    <div class="col-xs-12 col-md-8">
+	  <!--{{ with $page.Content }}<p>{{ . | markdownify }}</p>{{ end }}-->
+
+    {{ range (sort (where (where (where $.Site.RegularPages "Type" "talk") ".Params.selected" true) ".Params.upcoming" true) ".Params.time_start" "desc") }}
+      {{ if eq $page.Params.list_format 1 }}
+        {{ partial "talk_li_detailed" . }}
+      {{ else }}
+        {{ partial "talk_li_simple" . }}
+      {{ end }}
+    {{ end }}
+  </div>
+<!--</div>-->
+	<!-- inserted upcoming/recent talks & pub here -->
+
+	<!-- inserted publicity here -->
+	<!--
+	  <div class="col-xs-12 col-md-4 section-heading">
+    <h2>Publicity</h2>
+    {{ with $page.Params.subtitle }}<p>{{ . | markdownify }}</p>{{ end }}
+  </div>
+    <div class="col-xs-12 col-md-8">
+	  <!--{{ with $page.Content }}<p>{{ . | markdownify }}</p>{{ end }}-->
+
+    <!--
+    {{ range (sort (where (where (where $.Site.RegularPages "Type" "talk") ".Params.selected" true) ".Params.publicity_entry" true) ".Params.time_start" "desc") }}
+      {{ if eq $page.Params.list_format 1 }}
+        {{ partial "talk_li_detailed" . }}
+      {{ else }}
+        {{ partial "talk_li_simple" . }}
+      {{ end }}
+    {{ end }}
+  </div>
+  -->
+  <!-- inserted pub here -->
